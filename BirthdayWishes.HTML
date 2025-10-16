@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Happy Birthday</title>
+  <style>
+    :root{
+      --bg1:#fff7ff;
+      --bg2:#f0f6ff;
+      --card:#ffffff;
+      --accent:#7c3aed;
+      --muted:#6b7280;
+    }
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .card{
+      width:100%;
+      max-width:760px;
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:0 8px 30px rgba(16,24,40,0.08);
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+    h1{
+      margin:0 0 6px 0;
+      color:var(--accent);
+      font-size:28px;
+    }
+    p.lead{ margin:0 0 18px 0; color:var(--muted); }
+    form.row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    input[type="text"]{
+      flex:1;
+      padding:10px 12px;
+      font-size:16px;
+      border:1px solid #e6e9ee;
+      border-radius:10px;
+      outline:none;
+    }
+    input[type="text"]:focus{ box-shadow:0 0 0 3px rgba(124,58,237,0.12); border-color: rgba(124,58,237,0.3); }
+    button{
+      background:linear-gradient(180deg,var(--accent),#5b21b6);
+      color:#fff;
+      border:none;
+      padding:10px 16px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:0 6px 18px rgba(124,58,237,0.18);
+    }
+    button:active{ transform:translateY(1px); }
+    .output{
+      margin-top:6px;
+      min-height:120px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      position:relative;
+    }
+    .wish{
+      font-size:20px;
+      font-weight:700;
+      color:#111827;
+    }
+    .wish .name{ color:var(--accent); }
+    .subtext{ color:var(--muted); margin-top:6px; font-size:14px; }
+
+    /* flower layer */
+    .flowers{
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      z-index:10;
+    }
+    .flower{
+      position:absolute;
+      top:-8%;
+      user-select:none;
+      will-change:transform, opacity;
+      animation-name:fall;
+      animation-timing-function:ease-in;
+      animation-iteration-count:1;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10vh) rotate(0deg) scale(0.9); opacity:0 }
+      10% { opacity:1 }
+      100% { transform: translateY(120vh) rotate(720deg) scale(1); opacity:0.98 }
+    }
+
+    /* small responsiveness */
+    @media (max-width:520px){
+      h1{ font-size:22px }
+      .wish{ font-size:18px }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Happy Birthday 🎉</h1>
+    <p class="lead">Enter a name and click <strong>Submit</strong></p>
+
+    <form id="wishForm" class="row" onsubmit="return false;">
+      <label for="name" class="sr-only" style="display:none">Name</label>
+      <input id="name" type="text" placeholder="Enter name (e.g. Maya)" autocomplete="off" />
+      <button id="submitBtn" type="button">Submit</button>
+    </form>
+
+    <div class="output" id="output">
+      <div id="messageArea" aria-live="polite">
+        <div class="wish" id="wishText">Your birthday wish will appear here.</div>
+        <div class="subtext" id="subText">Tip: Click Submit again to re-throw flowers.</div>
+      </div>
+      <div class="flowers" id="flowerLayer" aria-hidden="true"></div>
+    </div>
+  </main>
+
+<script>
+(function(){
+  const submitBtn = document.getElementById('submitBtn');
+  const nameInput = document.getElementById('name');
+  const wishText = document.getElementById('wishText');
+  const subText = document.getElementById('subText');
+  const flowerLayer = document.getElementById('flowerLayer');
+
+  // list of flower emojis to choose from
+  const EMOJIS = ['🌸','🌺','🌼','💐','🌷','🌻','🌹'];
+
+  function sanitizeName(s){
+    return s.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  }
+
+  function throwFlowers(count = 20){
+    // clear previous flowers
+    flowerLayer.innerHTML = '';
+    const layerRect = flowerLayer.getBoundingClientRect();
+    for(let i=0;i<count;i++){
+      const span = document.createElement('span');
+      span.className = 'flower';
+      // random horizontal position (5% - 95%)
+      const leftPct = 5 + Math.random()*90;
+      span.style.left = leftPct + '%';
+      // random size 14-36px
+      const size = 14 + Math.floor(Math.random()*24);
+      span.style.fontSize = size + 'px';
+      // random rotation start
+      const rot = Math.floor(Math.random()*360);
+      span.style.transform = `rotate(${rot}deg)`;
+      // random emoji
+      span.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+      // random animation delay and duration
+      const delay = (Math.random()*0.8).toFixed(2) + 's';
+      const duration = (1.6 + Math.random()*2.2).toFixed(2) + 's';
+      span.style.animationDelay = delay;
+      span.style.animationDuration = duration;
+      // slight horizontal sway via CSS variable and small translateX applied in JS
+      // append
+      flowerLayer.appendChild(span);
+
+      // small horizontal drift using setTimeout to avoid layout thrash
+      (function(el){
+        const drift = (Math.random()*60 - 30); // -30 to +30 px
+        // apply translateX gradually using transition for a nicer look
+        el.style.transition = `transform ${duration} linear ${delay}`;
+        setTimeout(() => {
+          // move horizontally while falling (applies in addition to keyframe translateY from animation)
+          el.style.transform = `translateX(${drift}px) rotate(${rot + 360}deg)`;
+        }, 50);
+      })(span);
+    }
+
+    // remove after max duration to keep DOM clean
+    const maxDuration = 5000;
+    setTimeout(()=> flowerLayer.innerHTML = '', maxDuration);
+  }
+
+  function showWish(name){
+    if(!name){
+      wishText.textContent = 'Please enter a name to send wishes.';
+      subText.textContent = 'Tip: Type a name and click Submit.';
+      return;
+    }
+    const safe = sanitizeName(name);
+    wishText.innerHTML = `Happy Birthday, <span class="name" style="color:var(--accent)">${safe}</span>! 🎂`;
+    subText.textContent = 'Wishing you joy, laughter, and lots of cake.';
+  }
+
+  submitBtn.addEventListener('click', () => {
+    const name = nameInput.value;
+    if(!name || !name.trim()){
+      // flash message to enter a name
+      nameInput.focus();
+      nameInput.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.12)';
+      setTimeout(()=> nameInput.style.boxShadow = '', 900);
+      return;
+    }
+    showWish(name);
+    // small timeout so text appears then flowers start (feel)
+    setTimeout(() => throwFlowers(26), 120);
+  });
+
+  // allow Enter key to submit
+  nameInput.addEventListener('keydown', (ev) => {
+    if(ev.key === 'Enter'){
+      ev.preventDefault();
+      submitBtn.click();
+    }
+  });
+
+  // focus input on load
+  nameInput.focus();
+})();
+</script>
+
+</body>
+</html>
